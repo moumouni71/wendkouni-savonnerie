@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Wendkouni Savonnerie</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header class="header">
+
+    <a href="index.html" class="logo">
+        🧼
+        <div>
+            <strong>Wendkouni</strong>
+            <small>Savonnerie</small>
+        </div>
+    </a>
+
+    <nav>
+        <a href="#accueil">Accueil</a>
+        <a href="#produits">Produits</a>
+        <a href="#apropos">À propos</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <button class="cart-button" onclick="ouvrirPanier()">
+        🛒
+        <span id="cart-count">0</span>
+    </button>
+
+</header>
+
+
+<!-- HERO -->
+
+<section id="accueil" class="hero">
+
+    <div class="hero-text">
+
+        <span class="badge">
+            🌿 Qualité • Nature • Bien-être
+        </span>
+
+        <h1>
+            Prenez soin de votre peau
+            <span>naturellement.</span>
+        </h1>
+
+        <p>
+            Découvrez les produits de Wendkouni Savonnerie,
+            fabriqués et sélectionnés avec soin.
+        </p>
+
+        <a href="#produits" class="main-button">
+            Découvrir nos produits
+        </a>
+
+    </div>
+
+    <div class="hero-circle">
+        🧼
+    </div>
+
+</section>
+
+
+<!-- PRODUITS -->
+
+<section id="produits" class="products-section">
+
+    <div class="section-title">
+
+        <span>Notre boutique</span>
+
+        <h2>Nos produits</h2>
+
+        <p>
+            Découvrez notre sélection.
+        </p>
+
+    </div>
+
+
+    <div class="search-box">
+
+        <input
+            id="search"
+            type="search"
+            placeholder="🔎 Rechercher un produit..."
+            oninput="rechercherProduit()"
+        >
+
+    </div>
+
+
+    <div id="categories" class="categories"></div>
+
+
+    <div id="products" class="products-grid"></div>
+
+</section>
+
+
+<!-- À PROPOS -->
+
+<section id="apropos" class="about">
+
+    <div class="about-text">
+
+        <span>À propos</span>
+
+        <h2>
+            Wendkouni Savonnerie
+        </h2>
+
+        <p>
+            Notre objectif est de proposer des produits
+            de qualité pour les soins et l'hygiène
+            quotidienne.
+        </p>
+
+        <p>
+            Nous accordons une attention particulière
+            à la qualité et à la satisfaction de nos clients.
+        </p>
+
+    </div>
+
+    <div class="about-box">
+        🌿
+        <h3>Qualité</h3>
+        <p>Des produits sélectionnés avec soin.</p>
+    </div>
+
+    <div class="about-box">
+        ❤️
+        <h3>Satisfaction</h3>
+        <p>La satisfaction de nos clients est notre priorité.</p>
+    </div>
+
+</section>
+
+
+<!-- CONTACT -->
+
+<section id="contact" class="contact">
+
+    <div class="section-title">
+
+        <span>Contact</span>
+
+        <h2>Besoin d'informations ?</h2>
+
+        <p>
+            Contactez Wendkouni Savonnerie.
+        </p>
+
+    </div>
+
+    <div class="contact-buttons">
+
+        <a
+            href="https://wa.me/226XXXXXXXX"
+            target="_blank"
+            class="whatsapp">
+            💬 WhatsApp
+        </a>
+
+        <a
+            href="0022674863617"
+            class="phone">
+            📞 Appeler
+        </a>
+
+    </div>
+
+</section>
+
+
+<!-- PANIER -->
+
+<div id="cart-overlay" class="overlay">
+
+    <div class="cart">
+
+        <div class="cart-header">
+
+            <h2>🛒 Mon panier</h2>
+
+            <button onclick="fermerPanier()">
+                ✕
+            </button>
+
+        </div>
+
+        <div id="cart-items"></div>
+
+        <div class="cart-total">
+
+            <span>Total</span>
+
+            <strong id="cart-total">
+                0 FCFA
+            </strong>
+
+        </div>
+
+        <button
+            class="order-button"
+            onclick="ouvrirCommande()">
+
+            Commander
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- MODAL PRODUIT -->
+
+<div id="product-modal" class="modal">
+
+    <div class="modal-content">
+
+        <button
+            class="modal-close"
+            onclick="fermerProduit()">
+            ✕
+        </button>
+
+        <div id="product-detail"></div>
+
+    </div>
+
+</div>
+
+
+<!-- MODAL COMMANDE -->
+
+<div id="order-modal" class="modal">
+
+    <div class="modal-content order-form">
+
+        <button
+            class="modal-close"
+            onclick="fermerCommande()">
+            ✕
+        </button>
+
+        <h2>📦 Finaliser la commande</h2>
+
+        <p>
+            Entrez vos informations.
+        </p>
+
+        <input
+            id="client-name"
+            type="text"
+            placeholder="Votre nom">
+
+        <input
+            id="client-phone"
+            type="tel"
+            placeholder="Votre numéro de téléphone">
+
+        <input
+            id="client-address"
+            type="text"
+            placeholder="Votre ville / quartier">
+
+        <select id="delivery">
+
+            <option value="">
+                Mode de livraison
+            </option>
+
+            <option value="Livraison">
+                Livraison
+            </option>
+
+            <option value="Retrait">
+                Retrait sur place
+            </option>
+
+        </select>
+
+        <button
+            class="order-button"
+            onclick="envoyerCommande()">
+
+            💬 Commander sur WhatsApp
+
+        </button>
+
+    </div>
+
+</div>
+
+
+<footer>
+
+    <strong>
+        🧼 Wendkouni Savonnerie
+    </strong>
+
+    <p>
+        © 2026 Wendkouni Savonnerie
+    </p>
+
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="config.js"></script>
+<script src="script.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>

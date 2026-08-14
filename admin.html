@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>
+        Administration | Wendkouni Savonnerie
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="config.js"></script>
+
+    <script src="admin.js"></script>
+
+</head>
+
+
+<body>
+
+
+<!-- ================================
+     PAGE DE CONNEXION
+================================ -->
+
+<section
+    id="login-page"
+    class="login-page">
+
+    <div class="login-card">
+
+        <div class="login-logo">
+            🧼
+        </div>
+
+        <h1>
+            Wendkouni
+        </h1>
+
+        <p class="login-subtitle">
+            Espace administrateur
+        </p>
+
+
+        <form
+            id="login-form">
+
+            <label>
+                Adresse e-mail
+            </label>
+
+            <input
+                id="email"
+                type="email"
+                placeholder="Votre adresse e-mail"
+                required>
+
+
+            <label>
+                Mot de passe
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                placeholder="Votre mot de passe"
+                required>
+
+
+            <button
+                type="submit"
+                class="login-button">
+
+                🔐 Se connecter
+
+            </button>
+
+        </form>
+
+
+        <p
+            id="login-message"
+            class="message">
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<!-- ================================
+     TABLEAU DE BORD
+================================ -->
+
+<section
+    id="dashboard"
+    class="dashboard"
+    style="display:none;">
+
+
+    <!-- HEADER -->
+
+    <header class="admin-header">
+
+        <div class="brand">
+
+            <span>
+                🧼
+            </span>
+
+            <div>
+
+                <strong>
+                    Wendkouni
+                </strong>
+
+                <small>
+                    Administration
+                </small>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-actions">
+
+            <a
+                href="index.html"
+                target="_blank">
+
+                🌐 Boutique
+
+            </a>
+
+
+            <button
+                id="logout-button">
+
+                🚪 Déconnexion
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- CONTENU -->
+
+    <main class="admin-container">
+
+
+        <!-- TITRE -->
+
+        <section class="page-title">
+
+            <span>
+                Tableau de bord
+            </span>
+
+            <h1>
+                Gestion de la boutique
+            </h1>
+
+            <p>
+                Gérez les produits de Wendkouni Savonnerie.
+            </p>
+
+        </section>
+
+
+
+        <!-- STATISTIQUES -->
+
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <span>
+                    🧼
+                </span>
+
+                <div>
+
+                    <small>
+                        Produits
+                    </small>
+
+                    <strong id="total-products">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    📦
+                </span>
+
+                <div>
+
+                    <small>
+                        Stock total
+                    </small>
+
+                    <strong id="total-stock">
+                        0
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    💰
+                </span>
+
+                <div>
+
+                    <small>
+                        Valeur du stock
+                    </small>
+
+                    <strong id="stock-value">
+                        0 FCFA
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- FORMULAIRE -->
+
+        <section class="product-form-card">
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span>
+                        Catalogue
+                    </span>
+
+                    <h2 id="form-title">
+                        Ajouter un produit
+                    </h2>
+
+                </div>
+
+                <button
+                    id="cancel-edit"
+                    class="secondary-button">
+
+                    Annuler
+
+                </button>
+
+            </div>
+
+
+            <form id="product-form">
+
+
+                <input
+                    type="hidden"
+                    id="product-id">
+
+
+                <div class="form-grid">
+
+
+                    <div class="field">
+
+                        <label>
+                            Nom du produit *
+                        </label>
+
+                        <input
+                            id="product-name"
+                            type="text"
+                            placeholder="Ex : Savon au karité"
+                            required>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Catégorie *
+                        </label>
+
+                        <select
+                            id="product-category"
+                            required>
+
+                            <option value="">
+                                Choisir une catégorie
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="field full">
+
+                        <label>
+                            Description *
+                        </label>
+
+                        <textarea
+                            id="product-description"
+                            placeholder="Description du produit"
+                            required></textarea>
+
+                    </div>
+
+
+                    <div class="field full">
+
+                        <label>
+                            Composition
+                        </label>
+
+                        <textarea
+                            id="product-composition"
+                            placeholder="Composition du produit"></textarea>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Poids / Volume
+                        </label>
+
+                        <input
+                            id="product-weight"
+                            type="text"
+                            placeholder="Ex : 100 g">
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Prix (FCFA) *
+                        </label>
+
+                        <input
+                            id="product-price"
+                            type="number"
+                            min="0"
+                            placeholder="1000"
+                            required>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Stock *
+                        </label>
+
+                        <input
+                            id="product-stock"
+                            type="number"
+                            min="0"
+                            placeholder="20"
+                            required>
+
+                    </div>
+
+
+                    <div class="field">
+
+                        <label>
+                            Image
+                        </label>
+
+                        <input
+                            id="product-image"
+                            type="file"
+                            accept="image/*">
+
+                    </div>
+
+
+                </div>
+
+
+                <div
+                    id="image-preview"
+                    class="image-preview">
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="primary-button">
+
+                    💾 Enregistrer le produit
+
+                </button>
+
+
+            </form>
+
+        </section>
+
+
+
+        <!-- LISTE -->
+
+        <section class="products-section">
+
+
+            <div class="section-heading">
+
+                <div>
+
+                    <span>
+                        Catalogue
+                    </span>
+
+                    <h2>
+                        Produits enregistrés
+                    </h2>
+
+                </div>
+
+
+                <input
+                    id="admin-search"
+                    class="admin-search"
+                    type="search"
+                    placeholder="🔎 Rechercher...">
+
+            </div>
+
+
+            <div
+                id="admin-products"
+                class="admin-products">
+            </div>
+
+        </section>
+
+
+    </main>
+
+</section>
+
+
+
+</body>
+</html>
