@@ -1,7 +1,8 @@
-alert("admin.js fonctionne !");
+
 /* =========================================
    WENDKOUNI SAVONNERIE
    V3.2 ADMINISTRATION
+   AUTHENTIFICATION CORRIGÉE
 ========================================= */
 
 
@@ -13,9 +14,7 @@ const supabaseClient =
     window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_KEY
-    );
-
-
+    )
 /* =========================================
    VARIABLES
 ========================================= */
@@ -45,136 +44,132 @@ const loginMessage =
 
 
 /* =========================================
-   VERIFIER SESSION
+   VERIFIER SI L'UTILISATEUR EST ADMIN
 ========================================= */
 
 async function verifierSession() {
 
-    const {
-        data: {
-            session
-        },
-        error
-    } = await supabaseClient.auth.getSession();
+    try {
+
+        const {
+            data: {
+                session
+            },
+            error
+        } =
+            await supabaseClient.auth.getSession();
 
 
-    if (error) {
+        if (error) {
 
-        console.error("Erreur session :", error);
+            console.error(
+                "Erreur récupération session :",
+                error
+            );
 
-        afficherConnexion();
+            afficherConnexion();
 
-        return;
+            return;
+        }
+
+
+        /* Aucun utilisateur connecté */
+
+        if (!session) {
+
+            console.log(
+                "Aucune session active."
+            );
+
+            afficherConnexion();
+
+            return;
+        }
+
+
+        console.log(
+            "Session trouvée :",
+            session.user.email
+        );
+
+
+        /* Vérification dans la table admins */
+
+        const {
+            data: admin,
+            error: adminError
+        } =
+            await supabaseClient
+            .from("admins")
+            .select("user_id")
+            .eq(
+                "user_id",
+                session.user.id
+            )
+            .maybeSingle();
+
+
+        if (adminError) {
+
+            console.error(
+                "Erreur vérification admin :",
+                adminError
+            );
+
+            afficherConnexion();
+
+            afficherMessage(
+                "Impossible de vérifier les droits administrateur."
+            );
+
+            return;
+        }
+
+
+        /* Utilisateur connecté mais pas administrateur */
+
+        if (!admin) {
+
+            console.error(
+                "Utilisateur non administrateur."
+            );
+
+            await supabaseClient.auth.signOut();
+
+            afficherConnexion();
+
+            afficherMessage(
+                "Ce compte n'est pas administrateur."
+            );
+
+            return;
+        }
+
+
+        /* Administrateur confirmé */
+
+        console.log(
+            "Administrateur confirmé."
+        );
+
+        afficherDashboard();
+
     }
 
-
-    if (!session) {
-
-        afficherConnexion();
-
-        return;
-    }
-
-
-    console.log(
-        "Utilisateur connecté :",
-        session.user.email
-    );
-
-
-    const {
-        data: admin,
-        error: adminError
-    } =
-        await supabaseClient
-        .from("admins")
-        .select("user_id")
-        .eq(
-            "user_id",
-            session.user.id
-        )
-        .maybeSingle();
-
-
-    if (adminError) {
+    catch (error) {
 
         console.error(
-            "Erreur vérification admin :",
-            adminError
+            "Erreur inattendue :",
+            error
         );
-
-        afficherMessage(
-            "Erreur de vérification administrateur."
-        );
-
-        return;
-    }
-
-
-    if (!admin) {
-
-        console.error(
-            "Cet utilisateur n'est pas administrateur."
-        );
-
-        await supabaseClient
-            .auth
-            .signOut();
 
         afficherConnexion();
 
         afficherMessage(
-            "Ce compte n'est pas administrateur."
+            "Une erreur est survenue."
         );
 
-        return;
     }
-
-
-    console.log(
-        "Administrateur confirmé."
-    );
-
-
-    afficherDashboard();
-}
-
-    /* Vérifier que l'utilisateur est admin */
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-        .from("admins")
-        .select("user_id")
-        .eq(
-            "user_id",
-            session.user.id
-        )
-        .maybeSingle();
-
-
-    if (error || !data) {
-
-        await supabaseClient
-            .auth
-            .signOut();
-
-
-        afficherConnexion();
-
-
-        afficherMessage(
-            "Ce compte n'est pas administrateur."
-        );
-
-
-        return;
-    }
-
-
-    afficherDashboard();
 
 }
 
@@ -186,10 +181,9 @@ async function verifierSession() {
 loginForm.addEventListener(
     "submit",
     async function(event) {
-
+console.log("FORMULAIRE DE CONNEXION DÉTECTÉ");
         event.preventDefault();
-
-
+console.log("BOUTON SE CONNECTER CLIQUÉ");
         const email =
             document
             .getElementById("email")
@@ -203,130 +197,141 @@ loginForm.addEventListener(
             .value;
 
 
+        if (!email || !password) {
+
+            afficherMessage(
+                "Veuillez saisir votre email et votre mot de passe."
+            );
+
+            return;
+        }
+
+
         afficherMessage(
             "Connexion en cours...",
-            true
+            false
         );
 
 
-        const {
-            data,
-            error
-        } =
-            await supabaseClient
-            .auth
-            .signInWithPassword({
+        try {
 
-                email: email,
+            const {
+                data,
+                error
+            } =
+                await supabaseClient
+                .auth
+                .signInWithPassword({
 
-                password: password
+                    email: email,
 
-            });
+                    password: password
+
+                });
 
 
-        if (error) {
+           if (error) {
+
+    console.error("ERREUR SUPABASE :", error);
+
+    alert(
+        "Code : " + error.code +
+        "\nMessage : " + error.message +
+        "\nStatus : " + error.status
+    );
+
+    afficherMessage(
+        error.message
+    );
+
+    return;
+}
+
+
+            console.log(
+                "Connexion Supabase réussie :",
+                data.user.email
+            );
+
+
+            /* Vérifier immédiatement les droits admin */
+
+            const {
+                data: admin,
+                error: adminError
+            } =
+                await supabaseClient
+                .from("admins")
+                .select("user_id")
+                .eq(
+                    "user_id",
+                    data.user.id
+                )
+                .maybeSingle();
+
+
+            if (adminError) {
+
+                console.error(
+                    "Erreur vérification administrateur :",
+                    adminError
+                );
+
+                await supabaseClient.auth.signOut();
+
+                afficherConnexion();
+
+                afficherMessage(
+                    "Impossible de vérifier vos droits administrateur."
+                );
+
+                return;
+            }
+
+
+            if (!admin) {
+
+                console.error(
+                    "Compte non administrateur."
+                );
+
+                await supabaseClient.auth.signOut();
+
+                afficherConnexion();
+
+                afficherMessage(
+                    "Ce compte n'a pas les droits administrateur."
+                );
+
+                return;
+            }
+
+
+            /* Tout est correct */
+
+            console.log(
+                "Administrateur connecté."
+            );
+
+
+            afficherDashboard();
+
+        }
+
+        catch (error) {
 
             console.error(
-                "Erreur de connexion :",
+                "Erreur inattendue :",
                 error
             );
 
-            afficherMessage(
-                error.message
-            );
-
-            return;
-        }
-
-
-        console.log(
-            "Connexion réussie :",
-            data.user.email
-        );
-
-
-        const {
-            data: admin,
-            error: adminError
-        } =
-            await supabaseClient
-            .from("admins")
-            .select("user_id")
-            .eq(
-                "user_id",
-                data.user.id
-            )
-            .maybeSingle();
-
-
-        if (adminError) {
-
-            console.error(
-                "Erreur admin :",
-                adminError
-            );
+            afficherConnexion();
 
             afficherMessage(
-                "Impossible de vérifier les droits administrateur."
+                "Une erreur est survenue pendant la connexion."
             );
 
-            return;
         }
-
-
-        if (!admin) {
-
-            await supabaseClient
-                .auth
-                .signOut();
-
-
-            afficherMessage(
-                "Ce compte n'est pas administrateur."
-            );
-
-            return;
-        }
-
-
-        afficherDashboard();
-
-    }
-);
-
-        /* Vérification admin */
-
-        const {
-            data: admin,
-            error: adminError
-        } =
-            await supabaseClient
-            .from("admins")
-            .select("user_id")
-            .eq(
-                "user_id",
-                data.user.id
-            )
-            .maybeSingle();
-
-
-        if (adminError || !admin) {
-
-            await supabaseClient
-                .auth
-                .signOut();
-
-
-            afficherMessage(
-                "Ce compte n'a pas les droits administrateur."
-            );
-
-
-            return;
-        }
-
-
-        afficherDashboard();
 
     }
 );
@@ -385,8 +390,6 @@ function afficherMessage(
         : "#368454";
 
 }
-
-
 /* =========================================
    CHARGER CATEGORIES
 ========================================= */
@@ -745,14 +748,15 @@ document
         const fichier =
             event.target.files[0];
 
-
         if (!fichier)
             return;
 
+        // Garder le vrai fichier pour Supabase Storage
+        fichierImage = fichier;
 
+        // Aperçu local
         const reader =
             new FileReader();
-
 
         reader.onload =
             function(e) {
@@ -760,11 +764,8 @@ document
                 imageActuelle =
                     e.target.result;
 
-
                 document
-                .getElementById(
-                    "image-preview"
-                )
+                .getElementById("image-preview")
                 .innerHTML = `
 
                     <img
@@ -772,17 +773,11 @@ document
                         alt="Aperçu">
 
                 `;
-
             };
 
-
-        reader.readAsDataURL(
-            fichier
-        );
-
+        reader.readAsDataURL(fichier);
     }
 );
-
 
 /* =========================================
    ENREGISTRER PRODUIT
@@ -895,24 +890,93 @@ document
 
         try {
 
-            let imageUrl =
-                null;
+           let imageUrl = null;
 
 
-            /*
-             * Pour cette étape,
-             * si une nouvelle image est sélectionnée,
-             * elle sera traitée à l'étape Storage.
-             */
+/* =========================================
+   UPLOAD DE L'IMAGE
+========================================= */
 
-            if (imageActuelle &&
-                imageActuelle.startsWith("http")) {
+if (fichierImage) {
 
-                imageUrl =
-                    imageActuelle;
+    const extension =
+        fichierImage.name
+        .split(".")
+        .pop()
+        .toLowerCase();
 
+    const nomFichier =
+        Date.now() +
+        "-" +
+        Math.random()
+        .toString(36)
+        .substring(2) +
+        "." +
+        extension;
+
+
+    console.log(
+        "Upload de l'image :",
+        nomFichier
+    );
+
+
+    const {
+        data: uploadData,
+        error: uploadError
+    } =
+        await supabaseClient
+        .storage
+        .from("Product-images")
+        .upload(
+            nomFichier,
+            fichierImage,
+            {
+                cacheControl: "3600",
+                upsert: false
             }
+        );
 
+
+    if (uploadError) {
+
+        console.error(
+            "Erreur upload image :",
+            uploadError
+        );
+
+        throw uploadError;
+    }
+
+
+    console.log(
+        "Image envoyée avec succès :",
+        uploadData
+    );
+
+
+    /* Récupérer l'URL publique */
+
+    const {
+        data: publicUrlData
+    } =
+        supabaseClient
+        .storage
+        .from("Product-images")
+        .getPublicUrl(
+            nomFichier
+        );
+
+
+    imageUrl =
+        publicUrlData.publicUrl;
+
+
+    console.log(
+        "URL image :",
+        imageUrl
+    );
+}
 
             const produitData = {
 
