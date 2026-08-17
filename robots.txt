@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://moumouni71.github.io/wendkouni-savonnerie/sitemap.xml
