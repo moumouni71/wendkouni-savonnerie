@@ -48,8 +48,7 @@ async function chargerProduits() {
         .order("created_at", {
             ascending: false
         });
-
-
+    
     if (error) {
 
         console.error(error);
@@ -65,6 +64,9 @@ async function chargerProduits() {
 
 
     produits = data || [];
+
+console.log("PRODUITS RECUS PAR LE SITE :", produits);
+console.log("NOMBRE DE PRODUITS :", produits.length);
 
     afficherCategories();
 
@@ -746,12 +748,13 @@ async function envoyerCommande() {
 
     if (error) {
 
-        console.error(error);
+    console.error("ERREUR ORDERS :", error);
 
-        alert(
-            "Impossible d'enregistrer la commande."
-        );
-
+    alert(
+        "ERREUR ORDERS : " +
+        error.message
+    );
+    
         return;
     }
 
@@ -801,87 +804,85 @@ async function envoyerCommande() {
     }
 
 
-    /* WHATSAPP */
+/* =========================================
+   WHATSAPP
+========================================= */
 
-    let message =
-        "Bonjour Wendkouni Savonnerie 👋%0A%0A";
+let message =
+    "Bonjour Wendkouni Savonnerie\n\n";
 
-    message +=
-        "📦 *Nouvelle commande*%0A%0A";
+message +=
+    "📦 *Nouvelle commande*\n\n";
 
-    message +=
-        "👤 Nom : " +
-        nom +
-        "%0A";
+message +=
+    "👤 Nom : " +
+    nom +
+    "\n";
 
-    message +=
-        "📞 Téléphone : " +
-        telephone +
-        "%0A";
+message +=
+    "📞 Téléphone : " +
+    telephone +
+    "\n";
 
-    message +=
-        "📍 Adresse : " +
-        adresse +
-        "%0A";
+message +=
+    "📍 Adresse : " +
+    adresse +
+    "\n";
 
-    message +=
-        "🚚 Livraison : " +
-        livraison +
-        "%0A%0A";
-
-
-    panier.forEach(article => {
-
-        const produit =
-            produits.find(
-                produit =>
-                    produit.id === article.id
-            );
+message +=
+    "🚚 Livraison : " +
+    livraison +
+    "\n\n";
 
 
-        if (!produit) return;
+panier.forEach(article => {
 
+    const produit =
+        produits.find(
+            produit =>
+                produit.id === article.id
+        );
 
-        const sousTotal =
-            Number(produit.price)
-            * article.quantite;
+    if (!produit) return;
 
-
-        message +=
-            "• " +
-            produit.name +
-            " × " +
-            article.quantite +
-            " = " +
-            sousTotal.toLocaleString() +
-            " FCFA%0A";
-
-    });
-
+    const sousTotal =
+        Number(produit.price) *
+        article.quantite;
 
     message +=
-        "%0A💰 *TOTAL : " +
-        total.toLocaleString() +
-        " FCFA*";
+        "• " +
+        produit.name +
+        " × " +
+        article.quantite +
+        " = " +
+        sousTotal.toLocaleString() +
+        " FCFA\n";
+});
 
 
-    const numero =
-        "226XXXXXXXX";
+message +=
+    "\n💰 *TOTAL : " +
+    total.toLocaleString() +
+    " FCFA*";
 
 
-    const url =
-        "https://wa.me/" +
-        numero +
-        "?text=" +
-        message;
+/* NUMÉRO WHATSAPP */
+
+const numero = "22671386328";
 
 
-    window.open(
-        url,
-        "_blank"
-    );
+/* LIEN WHATSAPP */
+
+const url =
+    "https://wa.me/" +
+    numero +
+    "?text=" +
+    encodeURIComponent(message);
 
 
+/* OUVERTURE */
+
+window.location.href = url;
     /* NETTOYAGE */
 
     panier = [];

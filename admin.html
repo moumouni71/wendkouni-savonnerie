@@ -7,18 +7,16 @@
 
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1.0">
+        content="width=device-width, initial-scale=1.0"
+    >
 
-    <title>
-        Administration | Wendkouni Savonnerie
-    </title>
+    <title>Administration | Wendkouni Savonnerie</title>
 
+    <!-- CSS EXISTANT DE LA V3.2 -->
     <link
         rel="stylesheet"
-        href="admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="config.js"></script>
+        href="admin.css"
+    >
 
 </head>
 
@@ -26,13 +24,14 @@
 <body>
 
 
-<!-- ================================
+<!-- =========================================
      PAGE DE CONNEXION
-================================ -->
+========================================= -->
 
 <section
     id="login-page"
-    class="login-page">
+    class="login-page"
+>
 
     <div class="login-card">
 
@@ -40,55 +39,60 @@
             🧼
         </div>
 
+
         <h1>
             Wendkouni
         </h1>
+
 
         <p class="login-subtitle">
             Espace administrateur
         </p>
 
 
-        <form
-            id="login-form">
+        <form id="login-form">
 
-            <label>
+
+            <label for="email">
                 Adresse e-mail
             </label>
 
             <input
-                id="email"
                 type="email"
+                id="email"
                 placeholder="Votre adresse e-mail"
-                required>
+                autocomplete="email"
+                required
+            >
 
 
-            <label>
+            <label for="password">
                 Mot de passe
             </label>
 
             <input
-                id="password"
                 type="password"
+                id="password"
                 placeholder="Votre mot de passe"
-                required>
+                autocomplete="current-password"
+                required
+            >
 
 
             <button
                 type="submit"
-                class="login-button">
-
+                class="login-button"
+            >
                 🔐 Se connecter
-
             </button>
 
+
+            <p
+                id="login-message"
+                class="message"
+            ></p>
+
         </form>
-
-
-        <p
-            id="login-message"
-            class="message">
-        </p>
 
     </div>
 
@@ -96,19 +100,20 @@
 
 
 
-<!-- ================================
-     TABLEAU DE BORD
-================================ -->
+<!-- =========================================
+     DASHBOARD ADMINISTRATEUR
+========================================= -->
 
 <section
     id="dashboard"
-    class="dashboard"
-    style="display:none;">
+    style="display:none;"
+>
 
 
     <!-- HEADER -->
 
     <header class="admin-header">
+
 
         <div class="brand">
 
@@ -119,7 +124,7 @@
             <div>
 
                 <strong>
-                    Wendkouni
+                    Wendkouni Savonnerie
                 </strong>
 
                 <small>
@@ -135,18 +140,17 @@
 
             <a
                 href="index.html"
-                target="_blank">
-
-                🌐 Boutique
-
+                target="_blank"
+            >
+                🌐 Voir le site
             </a>
 
 
             <button
-                id="logout-button">
-
+                type="button"
+                id="logout-button"
+            >
                 🚪 Déconnexion
-
             </button>
 
         </div>
@@ -162,27 +166,53 @@
 
         <!-- TITRE -->
 
-        <section class="page-title">
+        <div class="page-title">
 
             <span>
-                Tableau de bord
+                ESPACE ADMINISTRATEUR
             </span>
 
             <h1>
-                Gestion de la boutique
+                Tableau de bord
             </h1>
 
             <p>
-                Gérez les produits de Wendkouni Savonnerie.
+                Gérez vos produits et votre stock.
             </p>
 
-        </section>
+        </div>
+
+
+
+        <!-- UTILISATEUR CONNECTÉ -->
+
+        <div
+            class="product-form-card"
+            style="margin-bottom:30px;"
+        >
+
+            <p>
+                Connecté en tant que :
+            </p>
+
+            <strong
+                id="admin-email"
+                style="
+                    color:#368454;
+                    font-size:18px;
+                "
+            >
+                —
+            </strong>
+
+        </div>
 
 
 
         <!-- STATISTIQUES -->
 
         <section class="stats">
+
 
             <div class="stat-card">
 
@@ -214,7 +244,7 @@
                 <div>
 
                     <small>
-                        Stock total
+                        Stock
                     </small>
 
                     <strong id="total-stock">
@@ -246,20 +276,22 @@
 
             </div>
 
+
         </section>
 
 
 
-        <!-- FORMULAIRE -->
+        <!-- FORMULAIRE PRODUIT -->
 
         <section class="product-form-card">
+
 
             <div class="section-heading">
 
                 <div>
 
                     <span>
-                        Catalogue
+                        PRODUITS
                     </span>
 
                     <h2 id="form-title">
@@ -268,52 +300,64 @@
 
                 </div>
 
+
                 <button
-                    id="cancel-edit"
-                    class="secondary-button">
-
+                    type="button"
+                    class="secondary-button"
+                    id="cancel-edit-button"
+                >
                     Annuler
-
                 </button>
 
             </div>
 
 
+
             <form id="product-form">
 
 
+                <!-- ID CACHÉ -->
+
                 <input
                     type="hidden"
-                    id="product-id">
+                    id="product-id"
+                >
 
 
                 <div class="form-grid">
 
 
+                    <!-- NOM -->
+
                     <div class="field">
 
-                        <label>
-                            Nom du produit *
+                        <label for="product-name">
+                            Nom du produit
                         </label>
 
                         <input
-                            id="product-name"
                             type="text"
-                            placeholder="Ex : Savon au karité"
-                            required>
+                            id="product-name"
+                            placeholder="Ex : Savon de Marseille"
+                            required
+                        >
 
                     </div>
 
 
+
+                    <!-- CATÉGORIE -->
+
                     <div class="field">
 
-                        <label>
-                            Catégorie *
+                        <label for="product-category">
+                            Catégorie
                         </label>
 
                         <select
                             id="product-category"
-                            required>
+                            required
+                        >
 
                             <option value="">
                                 Choisir une catégorie
@@ -324,108 +368,135 @@
                     </div>
 
 
+
+                    <!-- DESCRIPTION -->
+
                     <div class="field full">
 
-                        <label>
-                            Description *
+                        <label for="product-description">
+                            Description
                         </label>
 
                         <textarea
                             id="product-description"
                             placeholder="Description du produit"
-                            required></textarea>
+                            required
+                        ></textarea>
 
                     </div>
 
 
-                    <div class="field full">
 
-                        <label>
+                    <!-- COMPOSITION -->
+
+                    <div class="field">
+
+                        <label for="product-composition">
                             Composition
                         </label>
 
-                        <textarea
-                            id="product-composition"
-                            placeholder="Composition du produit"></textarea>
-
-                    </div>
-
-
-                    <div class="field">
-
-                        <label>
-                            Poids / Volume
-                        </label>
-
                         <input
-                            id="product-weight"
                             type="text"
-                            placeholder="Ex : 100 g">
+                            id="product-composition"
+                            placeholder="Ex : Huile de palme, soude..."
+                        >
 
                     </div>
 
 
+
+                    <!-- POIDS -->
+
                     <div class="field">
 
-                        <label>
-                            Prix (FCFA) *
+                        <label for="product-weight">
+                            Poids
                         </label>
 
                         <input
+                            type="text"
+                            id="product-weight"
+                            placeholder="Ex : 250 g"
+                        >
+
+                    </div>
+
+
+
+                    <!-- PRIX -->
+
+                    <div class="field">
+
+                        <label for="product-price">
+                            Prix (FCFA)
+                        </label>
+
+                        <input
+                            type="number"
                             id="product-price"
-                            type="number"
                             min="0"
-                            placeholder="1000"
-                            required>
+                            step="1"
+                            placeholder="275"
+                            required
+                        >
 
                     </div>
 
 
+
+                    <!-- STOCK -->
+
                     <div class="field">
 
-                        <label>
-                            Stock *
+                        <label for="product-stock">
+                            Stock
                         </label>
 
                         <input
+                            type="number"
                             id="product-stock"
-                            type="number"
                             min="0"
-                            placeholder="20"
-                            required>
+                            step="1"
+                            placeholder="50"
+                            required
+                        >
 
                     </div>
 
 
-                    <div class="field">
 
-                        <label>
-                            Image
+                    <!-- IMAGE -->
+
+                    <div class="field full">
+
+                        <label for="product-image">
+                            Image du produit
                         </label>
 
                         <input
-                            id="product-image"
                             type="file"
-                            accept="image/*">
+                            id="product-image"
+                            accept="image/*"
+                        >
+
+
+                        <div
+                            id="image-preview"
+                            class="image-preview"
+                        ></div>
 
                     </div>
 
 
                 </div>
 
-
-                <div
-                    id="image-preview"
-                    class="image-preview">
-                </div>
 
 
                 <button
                     type="submit"
-                    class="primary-button">
-
+                    class="primary-button"
+                >
                     💾 Enregistrer le produit
-
                 </button>
 
 
@@ -435,7 +506,7 @@
 
 
 
-        <!-- LISTE -->
+        <!-- LISTE DES PRODUITS -->
 
         <section class="products-section">
 
@@ -445,7 +516,7 @@
                 <div>
 
                     <span>
-                        Catalogue
+                        CATALOGUE
                     </span>
 
                     <h2>
@@ -456,18 +527,26 @@
 
 
                 <input
+                    type="search"
                     id="admin-search"
                     class="admin-search"
-                    type="search"
-                    placeholder="🔎 Rechercher...">
+                    placeholder="🔎 Rechercher..."
+                >
 
             </div>
 
 
             <div
                 id="admin-products"
-                class="admin-products">
+                class="admin-products"
+            >
+
+                <p>
+                    Chargement des produits...
+                </p>
+
             </div>
+
 
         </section>
 
@@ -477,6 +556,24 @@
 </section>
 
 
+
+<!-- =========================================
+     SUPABASE
+========================================= -->
+
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+
+
+<!-- CONFIGURATION -->
+
+<script src="config.js"></script>
+
+
+<!-- JAVASCRIPT ADMIN -->
+
 <script src="admin.js"></script>
+
+
 </body>
+
 </html>

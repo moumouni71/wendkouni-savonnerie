@@ -1,172 +1,445 @@
-
 /* =========================================
    WENDKOUNI SAVONNERIE
-   V3.2 ADMINISTRATION
-   AUTHENTIFICATION CORRIGÉE
+   ADMIN.JS — V3.2
+
+   AUTHENTIFICATION + PRODUITS + IMAGES
 ========================================= */
 
 
 /* =========================================
-   SUPABASE
+   1. INITIALISATION
+========================================= */
+
+console.log("=================================");
+console.log("WENDKOUNI SAVONNERIE - ADMIN V3.2");
+console.log("admin.js chargé");
+console.log("=================================");
+
+
+/* =========================================
+   2. VERIFICATION CONFIGURATION
+========================================= */
+
+if (
+    typeof SUPABASE_URL === "undefined" ||
+    typeof SUPABASE_KEY === "undefined"
+) {
+
+    console.error(
+        "SUPABASE_URL ou SUPABASE_KEY introuvable."
+    );
+
+    alert(
+        "Erreur : config.js n'est pas correctement chargé."
+    );
+
+    throw new Error(
+        "Configuration Supabase absente."
+    );
+}
+
+
+console.log(
+    "URL Supabase :",
+    SUPABASE_URL
+);
+
+
+/* =========================================
+   3. VERIFICATION SUPABASE
+========================================= */
+
+if (
+    !window.supabase ||
+    !window.supabase.createClient
+) {
+
+    console.error(
+        "Bibliothèque Supabase non chargée."
+    );
+
+    alert(
+        "Erreur : la bibliothèque Supabase n'est pas chargée."
+    );
+
+    throw new Error(
+        "Supabase JS indisponible."
+    );
+}
+
+
+/* =========================================
+   4. CLIENT SUPABASE
 ========================================= */
 
 const supabaseClient =
     window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_KEY
-    )
+    );
+
+
+console.log(
+    "Client Supabase créé avec succès."
+);
+
+
 /* =========================================
-   VARIABLES
+   5. VARIABLES
 ========================================= */
 
 let produits = [];
 
 let categories = [];
 
-let imageActuelle = null;
+let fichierImage = null;
+
+let imageUrlActuelle = null;
 
 
 /* =========================================
-   ELEMENTS
+   6. ELEMENTS HTML
 ========================================= */
 
 const loginPage =
-    document.getElementById("login-page");
+    document.getElementById(
+        "login-page"
+    );
+
 
 const dashboard =
-    document.getElementById("dashboard");
+    document.getElementById(
+        "dashboard"
+    );
+
 
 const loginForm =
-    document.getElementById("login-form");
+    document.getElementById(
+        "login-form"
+    );
+
 
 const loginMessage =
-    document.getElementById("login-message");
+    document.getElementById(
+        "login-message"
+    );
+
+
+const logoutButton =
+    document.getElementById(
+        "logout-button"
+    );
+
+
+const adminEmail =
+    document.getElementById(
+        "admin-email"
+    );
+
+
+const productForm =
+    document.getElementById(
+        "product-form"
+    );
+
+
+const productImage =
+    document.getElementById(
+        "product-image"
+    );
+
+
+const imagePreview =
+    document.getElementById(
+        "image-preview"
+    );
+
+
+const cancelEditButton =
+    document.getElementById(
+        "cancel-edit-button"
+    );
+
+
+const searchInput =
+    document.getElementById(
+        "admin-search"
+    );
 
 
 /* =========================================
-   VERIFIER SI L'UTILISATEUR EST ADMIN
+   7. DIAGNOSTIC
+========================================= */
+
+function debug(message) {
+
+    console.log(
+        "[ADMIN V3.2]",
+        message
+    );
+
+}
+
+
+/* =========================================
+   8. MESSAGE CONNEXION
+========================================= */
+
+function afficherMessage(
+    message,
+    erreur = true
+) {
+
+    if (!loginMessage)
+        return;
+
+
+    loginMessage.textContent =
+        message;
+
+
+    loginMessage.style.color =
+        erreur
+        ? "#c0392b"
+        : "#368454";
+
+}
+
+
+/* =========================================
+   9. AFFICHER CONNEXION
+========================================= */
+
+function afficherConnexion() {
+
+    loginPage.style.display =
+        "flex";
+
+
+    dashboard.style.display =
+        "none";
+
+
+    debug(
+        "Page de connexion affichée."
+    );
+
+}
+
+
+/* =========================================
+   10. AFFICHER DASHBOARD
+========================================= */
+
+function afficherDashboard(
+    utilisateur
+) {
+
+    loginPage.style.display =
+        "none";
+
+
+    dashboard.style.display =
+        "block";
+
+
+    if (adminEmail) {
+
+        adminEmail.textContent =
+            utilisateur.email;
+
+    }
+
+
+    debug(
+        "Dashboard administrateur affiché."
+    );
+
+}
+
+
+/* =========================================
+   11. VERIFIER ADMINISTRATEUR
+========================================= */
+
+async function verifierAdministrateur(
+    utilisateur
+) {
+
+    debug(
+        "Vérification du compte administrateur..."
+    );
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+        .from("admins")
+        .select("user_id")
+        .eq(
+            "user_id",
+            utilisateur.id
+        )
+        .maybeSingle();
+
+
+    if (error) {
+
+        console.error(
+            "Erreur table admins :",
+            error
+        );
+
+
+        debug(
+            "ERREUR TABLE ADMINS : " +
+            error.message
+        );
+
+
+        throw error;
+
+    }
+
+
+    if (!data) {
+
+        debug(
+            "Utilisateur absent de la table admins."
+        );
+
+
+        return false;
+
+    }
+
+
+    debug(
+        "Compte administrateur confirmé."
+    );
+
+
+    return true;
+
+}
+
+
+/* =========================================
+   12. VERIFIER SESSION
 ========================================= */
 
 async function verifierSession() {
 
+    debug(
+        "Vérification de la session..."
+    );
+
+
     try {
 
         const {
-            data: {
-                session
-            },
+            data,
             error
         } =
-            await supabaseClient.auth.getSession();
+            await supabaseClient
+            .auth
+            .getSession();
 
 
         if (error) {
 
             console.error(
-                "Erreur récupération session :",
+                "Erreur getSession :",
                 error
             );
 
+
             afficherConnexion();
 
             return;
+
         }
 
 
-        /* Aucun utilisateur connecté */
+        const session =
+            data.session;
+
 
         if (!session) {
 
-            console.log(
+            debug(
                 "Aucune session active."
             );
+
 
             afficherConnexion();
 
             return;
+
         }
 
 
-        console.log(
-            "Session trouvée :",
+        debug(
+            "Session trouvée."
+        );
+
+
+        debug(
+            "Utilisateur : " +
             session.user.email
         );
 
 
-        /* Vérification dans la table admins */
+        const estAdmin =
+            await verifierAdministrateur(
+                session.user
+            );
 
-        const {
-            data: admin,
-            error: adminError
-        } =
+
+        if (!estAdmin) {
+
             await supabaseClient
-            .from("admins")
-            .select("user_id")
-            .eq(
-                "user_id",
-                session.user.id
-            )
-            .maybeSingle();
+                .auth
+                .signOut();
 
-
-        if (adminError) {
-
-            console.error(
-                "Erreur vérification admin :",
-                adminError
-            );
 
             afficherConnexion();
 
-            afficherMessage(
-                "Impossible de vérifier les droits administrateur."
-            );
-
-            return;
-        }
-
-
-        /* Utilisateur connecté mais pas administrateur */
-
-        if (!admin) {
-
-            console.error(
-                "Utilisateur non administrateur."
-            );
-
-            await supabaseClient.auth.signOut();
-
-            afficherConnexion();
 
             afficherMessage(
                 "Ce compte n'est pas administrateur."
             );
 
+
             return;
+
         }
 
 
-        /* Administrateur confirmé */
-
-        console.log(
-            "Administrateur confirmé."
+        afficherDashboard(
+            session.user
         );
 
-        afficherDashboard();
+
+        await initialiserDashboard();
 
     }
 
     catch (error) {
 
         console.error(
-            "Erreur inattendue :",
+            "Erreur verifierSession :",
             error
         );
 
+
         afficherConnexion();
 
+
         afficherMessage(
-            "Une erreur est survenue."
+            "Impossible de vérifier la session."
         );
 
     }
@@ -175,41 +448,75 @@ async function verifierSession() {
 
 
 /* =========================================
-   CONNEXION
+   13. CONNEXION
 ========================================= */
 
 loginForm.addEventListener(
     "submit",
     async function(event) {
-console.log("FORMULAIRE DE CONNEXION DÉTECTÉ");
+
         event.preventDefault();
-console.log("BOUTON SE CONNECTER CLIQUÉ");
+
+
+        console.log(
+            "FORMULAIRE DE CONNEXION DÉTECTÉ"
+        );
+
+
         const email =
             document
-            .getElementById("email")
+            .getElementById(
+                "email"
+            )
             .value
             .trim();
 
 
         const password =
             document
-            .getElementById("password")
+            .getElementById(
+                "password"
+            )
             .value;
 
 
-        if (!email || !password) {
+        if (
+            !email ||
+            !password
+        ) {
 
             afficherMessage(
-                "Veuillez saisir votre email et votre mot de passe."
+                "Veuillez saisir votre e-mail et votre mot de passe."
             );
 
             return;
+
         }
+
+
+        const bouton =
+            loginForm.querySelector(
+                "button[type='submit']"
+            );
+
+
+        bouton.disabled =
+            true;
+
+
+        bouton.textContent =
+            "Connexion...";
 
 
         afficherMessage(
             "Connexion en cours...",
             false
+        );
+
+
+        debug(
+            "Tentative de connexion : " +
+            email
         );
 
 
@@ -230,105 +537,182 @@ console.log("BOUTON SE CONNECTER CLIQUÉ");
                 });
 
 
-           if (error) {
+            if (error) {
 
-    console.error("ERREUR SUPABASE :", error);
-
-    alert(
-        "Code : " + error.code +
-        "\nMessage : " + error.message +
-        "\nStatus : " + error.status
-    );
-
-    afficherMessage(
-        error.message
-    );
-
-    return;
-}
+                console.error(
+                    "ERREUR SUPABASE LOGIN :",
+                    error
+                );
 
 
-            console.log(
-                "Connexion Supabase réussie :",
+                debug(
+                    "ERREUR LOGIN : " +
+                    error.message
+                );
+
+
+                afficherMessage(
+                    error.message
+                );
+
+
+                return;
+
+            }
+
+
+            if (!data.user) {
+
+                afficherMessage(
+                    "Connexion impossible."
+                );
+
+
+                return;
+
+            }
+
+
+            debug(
+                "Authentification Supabase réussie."
+            );
+
+
+            debug(
+                "Utilisateur : " +
                 data.user.email
             );
 
 
-            /* Vérifier immédiatement les droits admin */
+            const estAdmin =
+                await verifierAdministrateur(
+                    data.user
+                );
 
-            const {
-                data: admin,
-                error: adminError
-            } =
+
+            if (!estAdmin) {
+
                 await supabaseClient
-                .from("admins")
-                .select("user_id")
-                .eq(
-                    "user_id",
-                    data.user.id
-                )
-                .maybeSingle();
+                    .auth
+                    .signOut();
 
-
-            if (adminError) {
-
-                console.error(
-                    "Erreur vérification administrateur :",
-                    adminError
-                );
-
-                await supabaseClient.auth.signOut();
 
                 afficherConnexion();
 
+
                 afficherMessage(
-                    "Impossible de vérifier vos droits administrateur."
+                    "Ce compte n'est pas administrateur."
                 );
 
+
                 return;
+
             }
 
 
-            if (!admin) {
-
-                console.error(
-                    "Compte non administrateur."
-                );
-
-                await supabaseClient.auth.signOut();
-
-                afficherConnexion();
-
-                afficherMessage(
-                    "Ce compte n'a pas les droits administrateur."
-                );
-
-                return;
-            }
-
-
-            /* Tout est correct */
-
-            console.log(
-                "Administrateur connecté."
+            afficherMessage(
+                "Connexion réussie.",
+                false
             );
 
 
-            afficherDashboard();
+            afficherDashboard(
+                data.user
+            );
+
+
+            await initialiserDashboard();
 
         }
 
         catch (error) {
 
             console.error(
-                "Erreur inattendue :",
+                "Erreur connexion :",
                 error
             );
 
+
             afficherConnexion();
 
+
             afficherMessage(
-                "Une erreur est survenue pendant la connexion."
+                "Erreur pendant la connexion."
+            );
+
+        }
+
+        finally {
+
+            bouton.disabled =
+                false;
+
+
+            bouton.textContent =
+                "🔐 Se connecter";
+
+        }
+
+    }
+);
+
+
+/* =========================================
+   14. DECONNEXION
+========================================= */
+
+logoutButton.addEventListener(
+    "click",
+    async function() {
+
+        try {
+
+            debug(
+                "Déconnexion..."
+            );
+
+
+            const {
+                error
+            } =
+                await supabaseClient
+                .auth
+                .signOut();
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            debug(
+                "Déconnexion réussie."
+            );
+
+
+            afficherConnexion();
+
+
+            afficherMessage(
+                "Vous êtes déconnecté.",
+                false
+            );
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Erreur déconnexion :",
+                error
+            );
+
+
+            alert(
+                "Erreur de déconnexion : " +
+                error.message
             );
 
         }
@@ -338,33 +722,36 @@ console.log("BOUTON SE CONNECTER CLIQUÉ");
 
 
 /* =========================================
-   AFFICHER CONNEXION
+   15. EVENEMENTS AUTH
 ========================================= */
 
-function afficherConnexion() {
+supabaseClient
+.auth
+.onAuthStateChange(
+    function(event, session) {
 
-    loginPage.style.display =
-        "flex";
+        console.log(
+            "AUTH EVENT :",
+            event
+        );
 
-    dashboard.style.display =
-        "none";
-}
+    }
+);
 
 
 /* =========================================
-   AFFICHER DASHBOARD
+   16. INITIALISER DASHBOARD
 ========================================= */
 
-async function afficherDashboard() {
+async function initialiserDashboard() {
 
-    loginPage.style.display =
-        "none";
-
-    dashboard.style.display =
-        "block";
+    debug(
+        "Initialisation du dashboard..."
+    );
 
 
     await chargerCategories();
+
 
     await chargerProduits();
 
@@ -372,29 +759,15 @@ async function afficherDashboard() {
 
 
 /* =========================================
-   MESSAGE
-========================================= */
-
-function afficherMessage(
-    message,
-    erreur = true
-) {
-
-    loginMessage.textContent =
-        message;
-
-
-    loginMessage.style.color =
-        erreur
-        ? "#c0392b"
-        : "#368454";
-
-}
-/* =========================================
-   CHARGER CATEGORIES
+   17. CHARGER CATEGORIES
 ========================================= */
 
 async function chargerCategories() {
+
+    debug(
+        "Chargement des catégories..."
+    );
+
 
     const {
         data,
@@ -403,14 +776,36 @@ async function chargerCategories() {
         await supabaseClient
         .from("categories")
         .select("*")
-        .order("name");
+        .order(
+            "name",
+            {
+                ascending: true
+            }
+        );
 
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            "Erreur catégories :",
+            error
+        );
+
+
+        /*
+         * Si la table categories
+         * n'existe pas encore ou n'est
+         * pas accessible, on ne bloque
+         * pas le dashboard.
+         */
+
+        debug(
+            "Impossible de charger les catégories."
+        );
+
 
         return;
+
     }
 
 
@@ -424,6 +819,10 @@ async function chargerCategories() {
         );
 
 
+    if (!select)
+        return;
+
+
     select.innerHTML = `
 
         <option value="">
@@ -433,26 +832,45 @@ async function chargerCategories() {
     `;
 
 
-    categories.forEach(categorie => {
+    categories.forEach(
+        function(categorie) {
 
-        select.innerHTML += `
+            select.innerHTML += `
 
-            <option value="${categorie.name}">
-                ${categorie.name}
-            </option>
+                <option
+                    value="${echapperHTML(
+                        categorie.name
+                    )}"
+                >
+                    ${echapperHTML(
+                        categorie.name
+                    )}
+                </option>
 
-        `;
+            `;
 
-    });
+        }
+    );
+
+
+    debug(
+        categories.length +
+        " catégorie(s) chargée(s)."
+    );
 
 }
 
 
 /* =========================================
-   CHARGER PRODUITS
+   18. CHARGER PRODUITS
 ========================================= */
 
 async function chargerProduits() {
+
+    debug(
+        "Chargement des produits..."
+    );
+
 
     const {
         data,
@@ -471,13 +889,25 @@ async function chargerProduits() {
 
     if (error) {
 
-        console.error(error);
+        console.error(
+            "Erreur produits :",
+            error
+        );
+
+
+        debug(
+            "Erreur produits : " +
+            error.message
+        );
+
 
         alert(
             "Impossible de charger les produits."
         );
 
+
         return;
+
     }
 
 
@@ -485,15 +915,24 @@ async function chargerProduits() {
         data || [];
 
 
+    debug(
+        produits.length +
+        " produit(s) chargé(s)."
+    );
+
+
     afficherStatistiques();
 
-    afficherProduits();
+
+    afficherProduits(
+        produits
+    );
 
 }
 
 
 /* =========================================
-   STATISTIQUES
+   19. STATISTIQUES
 ========================================= */
 
 function afficherStatistiques() {
@@ -504,49 +943,87 @@ function afficherStatistiques() {
 
     const totalStock =
         produits.reduce(
-            (total, produit) =>
-                total +
-                Number(produit.stock || 0),
+            function(total, produit) {
+
+                return total +
+                    Number(
+                        produit.stock || 0
+                    );
+
+            },
             0
         );
 
 
     const stockValue =
         produits.reduce(
-            (total, produit) =>
-                total +
-                (
-                    Number(produit.price || 0)
-                    *
-                    Number(produit.stock || 0)
-                ),
+            function(total, produit) {
+
+                return total +
+                    (
+                        Number(
+                            produit.price || 0
+                        )
+                        *
+                        Number(
+                            produit.stock || 0
+                        )
+                    );
+
+            },
             0
         );
 
 
-    document.getElementById(
-        "total-products"
-    ).textContent =
-        totalProducts;
+    const totalElement =
+        document.getElementById(
+            "total-products"
+        );
 
 
-    document.getElementById(
-        "total-stock"
-    ).textContent =
-        totalStock;
+    const stockElement =
+        document.getElementById(
+            "total-stock"
+        );
 
 
-    document.getElementById(
-        "stock-value"
-    ).textContent =
-        stockValue.toLocaleString()
-        + " FCFA";
+    const valueElement =
+        document.getElementById(
+            "stock-value"
+        );
+
+
+    if (totalElement) {
+
+        totalElement.textContent =
+            totalProducts;
+
+    }
+
+
+    if (stockElement) {
+
+        stockElement.textContent =
+            totalStock;
+
+    }
+
+
+    if (valueElement) {
+
+        valueElement.textContent =
+            stockValue.toLocaleString(
+                "fr-FR"
+            ) +
+            " FCFA";
+
+    }
 
 }
 
 
 /* =========================================
-   AFFICHER PRODUITS
+   20. AFFICHER PRODUITS
 ========================================= */
 
 function afficherProduits(
@@ -559,7 +1036,8 @@ function afficherProduits(
         );
 
 
-    container.innerHTML = "";
+    if (!container)
+        return;
 
 
     if (!liste.length) {
@@ -567,225 +1045,434 @@ function afficherProduits(
         container.innerHTML = `
 
             <p>
-                Aucun produit trouvé.
+                Aucun produit enregistré.
             </p>
 
         `;
 
+
         return;
+
     }
 
 
-    liste.forEach(produit => {
+    container.innerHTML =
+        liste
+        .map(
+            function(produit) {
 
-        let image = "🧼";
+                let imageHTML;
 
 
-        if (produit.image_url) {
+                if (
+                    produit.image_url
+                ) {
 
-            image = `
+                    imageHTML = `
 
-                <img
-                    src="${produit.image_url}"
-                    alt="${produit.name}">
+                        <img
+                            src="${echapperAttribut(
+                                produit.image_url
+                            )}"
+                            alt="${echapperAttribut(
+                                produit.name
+                            )}"
+                            loading="lazy"
+                        >
 
-            `;
+                    `;
+
+                }
+
+                else {
+
+                    imageHTML = "🧼";
+
+                }
+
+
+                const stock =
+                    Number(
+                        produit.stock || 0
+                    );
+
+
+                const stockClass =
+                    stock > 0
+                    ? "stock-good"
+                    : "stock-empty";
+
+
+                return `
+
+                    <article
+                        class="admin-product"
+                    >
+
+
+                        <div
+                            class="admin-product-image"
+                        >
+
+                            ${imageHTML}
+
+                        </div>
+
+
+                        <div
+                            class="admin-product-info"
+                        >
+
+
+                            <h3>
+                                ${echapperHTML(
+                                    produit.name || ""
+                                )}
+                            </h3>
+
+
+                            <p
+                                class="admin-description"
+                            >
+                                ${echapperHTML(
+                                    produit.description || ""
+                                )}
+                            </p>
+
+
+                            <div
+                                class="admin-price"
+                            >
+                                ${
+                                    Number(
+                                        produit.price || 0
+                                    ).toLocaleString(
+                                        "fr-FR"
+                                    )
+                                }
+                                FCFA
+                            </div>
+
+
+                            <div
+                                class="admin-stock ${stockClass}"
+                            >
+                                Stock :
+                                ${stock}
+                            </div>
+
+
+                            <div
+                                class="admin-actions"
+                            >
+
+
+                                <button
+                                    type="button"
+                                    class="edit-button"
+                                    data-action="edit"
+                                    data-id="${produit.id}"
+                                >
+                                    ✏️ Modifier
+                                </button>
+
+
+                                <button
+                                    type="button"
+                                    class="delete-button"
+                                    data-action="delete"
+                                    data-id="${produit.id}"
+                                >
+                                    🗑️ Supprimer
+                                </button>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </article>
+
+                `;
+
+            }
+        )
+        .join("");
+
+
+    /* Gestion des boutons */
+
+    container
+    .querySelectorAll(
+        "[data-action='edit']"
+    )
+    .forEach(
+        function(button) {
+
+            button.addEventListener(
+                "click",
+                function() {
+
+                    modifierProduit(
+                        Number(
+                            this.dataset.id
+                        )
+                    );
+
+                }
+            );
 
         }
+    );
 
 
-        const stockClass =
-            produit.stock > 0
-            ? "stock-good"
-            : "stock-empty";
+    container
+    .querySelectorAll(
+        "[data-action='delete']"
+    )
+    .forEach(
+        function(button) {
 
+            button.addEventListener(
+                "click",
+                function() {
 
-        container.innerHTML += `
+                    supprimerProduit(
+                        Number(
+                            this.dataset.id
+                        )
+                    );
 
-            <article
-                class="admin-product">
+                }
+            );
 
-
-                <div
-                    class="admin-product-image">
-
-                    ${image}
-
-                </div>
-
-
-                <div
-                    class="admin-product-info">
-
-
-                    <h3>
-                        ${produit.name}
-                    </h3>
-
-
-                    <p
-                        class="admin-description">
-
-                        ${produit.description || ""}
-
-                    </p>
-
-
-                    <div
-                        class="admin-price">
-
-                        ${Number(produit.price)
-                            .toLocaleString()}
-                        FCFA
-
-                    </div>
-
-
-                    <div
-                        class="admin-stock
-                        ${stockClass}">
-
-                        Stock :
-                        ${produit.stock}
-
-                    </div>
-
-
-                    <div
-                        class="admin-actions">
-
-
-                        <button
-                            class="edit-button"
-                            onclick="
-                                modifierProduit(
-                                    ${produit.id}
-                                )
-                            ">
-
-                            ✏️ Modifier
-
-                        </button>
-
-
-                        <button
-                            class="delete-button"
-                            onclick="
-                                supprimerProduit(
-                                    ${produit.id}
-                                )
-                            ">
-
-                            🗑️ Supprimer
-
-                        </button>
-
-
-                    </div>
-
-
-                </div>
-
-
-            </article>
-
-        `;
-
-    });
+        }
+    );
 
 }
 
 
 /* =========================================
-   RECHERCHE ADMIN
+   21. APERCU IMAGE
 ========================================= */
 
-document
-.getElementById("admin-search")
-.addEventListener(
-    "input",
-    function() {
-
-        const recherche =
-            this.value
-            .toLowerCase()
-            .trim();
-
-
-        const resultat =
-            produits.filter(
-                produit =>
-
-                    produit.name
-                    .toLowerCase()
-                    .includes(recherche)
-
-                    ||
-
-                    (produit.description || "")
-                    .toLowerCase()
-                    .includes(recherche)
-
-            );
-
-
-        afficherProduits(resultat);
-
-    }
-);
-
-
-/* =========================================
-   IMAGE
-========================================= */
-
-document
-.getElementById("product-image")
-.addEventListener(
+productImage.addEventListener(
     "change",
     function(event) {
 
         const fichier =
             event.target.files[0];
 
-        if (!fichier)
+
+        if (!fichier) {
+
+            fichierImage =
+                null;
+
             return;
 
-        // Garder le vrai fichier pour Supabase Storage
-        fichierImage = fichier;
+        }
 
-        // Aperçu local
+
+        if (
+            !fichier.type.startsWith(
+                "image/"
+            )
+        ) {
+
+            alert(
+                "Veuillez sélectionner une image."
+            );
+
+
+            productImage.value =
+                "";
+
+
+            fichierImage =
+                null;
+
+
+            return;
+
+        }
+
+
+        /*
+         * Limite : 5 Mo
+         */
+
+        if (
+            fichier.size >
+            5 * 1024 * 1024
+        ) {
+
+            alert(
+                "L'image ne doit pas dépasser 5 Mo."
+            );
+
+
+            productImage.value =
+                "";
+
+
+            fichierImage =
+                null;
+
+
+            return;
+
+        }
+
+
+        fichierImage =
+            fichier;
+
+
         const reader =
             new FileReader();
 
+
         reader.onload =
-            function(e) {
+            function(event) {
 
-                imageActuelle =
-                    e.target.result;
-
-                document
-                .getElementById("image-preview")
-                .innerHTML = `
+                imagePreview.innerHTML = `
 
                     <img
-                        src="${imageActuelle}"
-                        alt="Aperçu">
+                        src="${event.target.result}"
+                        alt="Aperçu"
+                    >
 
                 `;
+
             };
 
-        reader.readAsDataURL(fichier);
+
+        reader.readAsDataURL(
+            fichier
+        );
+
     }
 );
 
+
 /* =========================================
-   ENREGISTRER PRODUIT
+   22. UPLOAD IMAGE
 ========================================= */
 
-document
-.getElementById("product-form")
-.addEventListener(
+async function envoyerImage(
+    fichier
+) {
+
+    if (!fichier) {
+
+        return null;
+
+    }
+
+
+    const extension =
+        fichier.name
+        .split(".")
+        .pop()
+        .toLowerCase();
+
+
+    const nomFichier =
+        Date.now()
+        +
+        "-"
+        +
+        Math.random()
+            .toString(36)
+            .substring(2, 10)
+        +
+        "."
+        +
+        extension;
+
+
+    debug(
+        "Upload image : " +
+        nomFichier
+    );
+
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+        .storage
+        .from("Product-images")
+        .upload(
+            nomFichier,
+            fichier,
+            {
+                cacheControl: "3600",
+                upsert: false
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Erreur upload image :",
+            error
+        );
+
+
+        throw error;
+
+    }
+
+
+    debug(
+        "Image uploadée avec succès."
+    );
+
+
+    const {
+        data: publicData
+    } =
+        supabaseClient
+        .storage
+        .from("Product-images")
+        .getPublicUrl(
+            data.path
+        );
+
+
+    if (
+        !publicData ||
+        !publicData.publicUrl
+    ) {
+
+        throw new Error(
+            "Impossible de récupérer l'URL publique de l'image."
+        );
+
+    }
+
+
+    debug(
+        "URL publique obtenue."
+    );
+
+
+    return publicData.publicUrl;
+
+}
+
+
+/* =========================================
+   23. ENREGISTRER PRODUIT
+========================================= */
+
+productForm.addEventListener(
     "submit",
     async function(event) {
 
@@ -794,13 +1481,17 @@ document
 
         const id =
             document
-            .getElementById("product-id")
+            .getElementById(
+                "product-id"
+            )
             .value;
 
 
         const name =
             document
-            .getElementById("product-name")
+            .getElementById(
+                "product-name"
+            )
             .value
             .trim();
 
@@ -857,14 +1548,19 @@ document
             .getElementById(
                 "product-category"
             )
-            .value;
+            .value
+            .trim();
 
+
+        /* Validation */
 
         if (
             !name ||
             !description ||
             !category ||
+            !Number.isFinite(price) ||
             price < 0 ||
+            !Number.isFinite(stock) ||
             stock < 0
         ) {
 
@@ -872,17 +1568,21 @@ document
                 "Veuillez remplir correctement les champs obligatoires."
             );
 
+
             return;
+
         }
 
 
         const bouton =
-            document.querySelector(
-                "#product-form .primary-button"
+            productForm.querySelector(
+                "button[type='submit']"
             );
 
 
-        bouton.disabled = true;
+        bouton.disabled =
+            true;
+
 
         bouton.textContent =
             "Enregistrement...";
@@ -890,93 +1590,27 @@ document
 
         try {
 
-           let imageUrl = null;
+            let imageUrl =
+                imageUrlActuelle;
 
 
-/* =========================================
-   UPLOAD DE L'IMAGE
-========================================= */
+            /* ==========================
+               NOUVELLE IMAGE
+            ========================== */
 
-if (fichierImage) {
+            if (fichierImage) {
 
-    const extension =
-        fichierImage.name
-        .split(".")
-        .pop()
-        .toLowerCase();
+                imageUrl =
+                    await envoyerImage(
+                        fichierImage
+                    );
 
-    const nomFichier =
-        Date.now() +
-        "-" +
-        Math.random()
-        .toString(36)
-        .substring(2) +
-        "." +
-        extension;
-
-
-    console.log(
-        "Upload de l'image :",
-        nomFichier
-    );
-
-
-    const {
-        data: uploadData,
-        error: uploadError
-    } =
-        await supabaseClient
-        .storage
-        .from("Product-images")
-        .upload(
-            nomFichier,
-            fichierImage,
-            {
-                cacheControl: "3600",
-                upsert: false
             }
-        );
 
 
-    if (uploadError) {
-
-        console.error(
-            "Erreur upload image :",
-            uploadError
-        );
-
-        throw uploadError;
-    }
-
-
-    console.log(
-        "Image envoyée avec succès :",
-        uploadData
-    );
-
-
-    /* Récupérer l'URL publique */
-
-    const {
-        data: publicUrlData
-    } =
-        supabaseClient
-        .storage
-        .from("Product-images")
-        .getPublicUrl(
-            nomFichier
-        );
-
-
-    imageUrl =
-        publicUrlData.publicUrl;
-
-
-    console.log(
-        "URL image :",
-        imageUrl
-    );
-}
+            /* ==========================
+               DONNEES PRODUIT
+            ========================== */
 
             const produitData = {
 
@@ -997,6 +1631,11 @@ if (fichierImage) {
             };
 
 
+            /*
+             * On ajoute image_url uniquement
+             * si nous avons une URL.
+             */
+
             if (imageUrl) {
 
                 produitData.image_url =
@@ -1005,14 +1644,21 @@ if (fichierImage) {
             }
 
 
-            let resultat;
-
-
-            /* MODIFICATION */
+            /* ==========================
+               MODIFICATION
+            ========================== */
 
             if (id) {
 
-                resultat =
+                debug(
+                    "Modification produit ID " +
+                    id
+                );
+
+
+                const {
+                    error
+                } =
                     await supabaseClient
                     .from("products")
                     .update(
@@ -1023,38 +1669,58 @@ if (fichierImage) {
                         Number(id)
                     );
 
+
+                if (error) {
+
+                    throw error;
+
+                }
+
+
+                alert(
+                    "Produit modifié avec succès."
+                );
+
             }
 
 
-            /* AJOUT */
+            /* ==========================
+               AJOUT
+            ========================== */
 
             else {
 
-                resultat =
+                debug(
+                    "Ajout nouveau produit..."
+                );
+
+
+                const {
+                    error
+                } =
                     await supabaseClient
                     .from("products")
                     .insert(
                         produitData
                     );
 
+
+                if (error) {
+
+                    throw error;
+
+                }
+
+
+                alert(
+                    "Produit ajouté avec succès."
+                );
+
             }
 
 
-            if (resultat.error) {
+            viderFormulaireProduit();
 
-                throw resultat.error;
-
-            }
-
-
-            alert(
-                id
-                ? "Produit modifié avec succès."
-                : "Produit ajouté avec succès."
-            );
-
-
-            viderFormulaire();
 
             await chargerProduits();
 
@@ -1062,7 +1728,10 @@ if (fichierImage) {
 
         catch(error) {
 
-            console.error(error);
+            console.error(
+                "Erreur enregistrement produit :",
+                error
+            );
 
 
             alert(
@@ -1074,7 +1743,9 @@ if (fichierImage) {
 
         finally {
 
-            bouton.disabled = false;
+            bouton.disabled =
+                false;
+
 
             bouton.textContent =
                 "💾 Enregistrer le produit";
@@ -1086,20 +1757,31 @@ if (fichierImage) {
 
 
 /* =========================================
-   MODIFIER PRODUIT
+   24. MODIFIER PRODUIT
 ========================================= */
 
 function modifierProduit(id) {
 
     const produit =
         produits.find(
-            produit =>
-                produit.id === id
+            function(item) {
+
+                return item.id === id;
+
+            }
         );
 
 
-    if (!produit)
+    if (!produit) {
+
+        alert(
+            "Produit introuvable."
+        );
+
+
         return;
+
+    }
 
 
     document.getElementById(
@@ -1117,7 +1799,7 @@ function modifierProduit(id) {
     document.getElementById(
         "product-name"
     ).value =
-        produit.name;
+        produit.name || "";
 
 
     document.getElementById(
@@ -1141,45 +1823,60 @@ function modifierProduit(id) {
     document.getElementById(
         "product-price"
     ).value =
-        produit.price;
+        produit.price || 0;
 
 
     document.getElementById(
         "product-stock"
     ).value =
-        produit.stock;
+        produit.stock || 0;
 
 
     document.getElementById(
         "product-category"
     ).value =
-        produit.category;
+        produit.category || "";
 
 
-    imageActuelle =
+    imageUrlActuelle =
         produit.image_url || null;
+
+
+    fichierImage =
+        null;
+
+
+    productImage.value =
+        "";
 
 
     if (produit.image_url) {
 
-        document.getElementById(
-            "image-preview"
-        ).innerHTML = `
+        imagePreview.innerHTML = `
 
             <img
-                src="${produit.image_url}"
-                alt="${produit.name}">
+                src="${echapperAttribut(
+                    produit.image_url
+                )}"
+                alt="${echapperAttribut(
+                    produit.name
+                )}"
+            >
 
         `;
 
     }
+
     else {
 
-        document.getElementById(
-            "image-preview"
-        ).innerHTML = "";
+        imagePreview.innerHTML =
+            "";
 
     }
+
+
+    cancelEditButton.style.display =
+        "inline-block";
 
 
     window.scrollTo({
@@ -1194,15 +1891,71 @@ function modifierProduit(id) {
 
 
 /* =========================================
-   SUPPRIMER
+   25. ANNULER MODIFICATION
+========================================= */
+
+cancelEditButton.addEventListener(
+    "click",
+    function() {
+
+        viderFormulaireProduit();
+
+    }
+);
+
+
+/* =========================================
+   26. VIDER FORMULAIRE
+========================================= */
+
+function viderFormulaireProduit() {
+
+    productForm.reset();
+
+
+    document.getElementById(
+        "product-id"
+    ).value =
+        "";
+
+
+    fichierImage =
+        null;
+
+
+    imageUrlActuelle =
+        null;
+
+
+    imagePreview.innerHTML =
+        "";
+
+
+    document.getElementById(
+        "form-title"
+    ).textContent =
+        "Ajouter un produit";
+
+
+    cancelEditButton.style.display =
+        "none";
+
+}
+
+
+/* =========================================
+   27. SUPPRIMER PRODUIT
 ========================================= */
 
 async function supprimerProduit(id) {
 
     const produit =
         produits.find(
-            produit =>
-                produit.id === id
+            function(item) {
+
+                return item.id === id;
+
+            }
         );
 
 
@@ -1212,7 +1965,9 @@ async function supprimerProduit(id) {
 
     const confirmation =
         confirm(
-            `Supprimer "${produit.name}" ?`
+            "Voulez-vous vraiment supprimer « " +
+            produit.name +
+            " » ?"
         );
 
 
@@ -1220,127 +1975,193 @@ async function supprimerProduit(id) {
         return;
 
 
-    const {
-        error
-    } =
-        await supabaseClient
-        .from("products")
-        .delete()
-        .eq(
-            "id",
+    try {
+
+        debug(
+            "Suppression produit ID " +
             id
         );
 
 
-    if (error) {
-
-        console.error(error);
-
-
-        alert(
-            "Impossible de supprimer le produit : " +
-            error.message
-        );
-
-
-        return;
-    }
+        const {
+            error
+        } =
+            await supabaseClient
+            .from("products")
+            .delete()
+            .eq(
+                "id",
+                id
+            );
 
 
-    alert(
-        "Produit supprimé."
-    );
+        if (error) {
 
-
-    await chargerProduits();
-
-}
-
-
-/* =========================================
-   ANNULER
-========================================= */
-
-document
-.getElementById("cancel-edit")
-.addEventListener(
-    "click",
-    viderFormulaire
-);
-
-
-function viderFormulaire() {
-
-    document
-    .getElementById(
-        "product-form"
-    )
-    .reset();
-
-
-    document.getElementById(
-        "product-id"
-    ).value = "";
-
-
-    document.getElementById(
-        "form-title"
-    ).textContent =
-        "Ajouter un produit";
-
-
-    document.getElementById(
-        "image-preview"
-    ).innerHTML = "";
-
-
-    imageActuelle = null;
-
-}
-
-
-/* =========================================
-   DÉCONNEXION
-========================================= */
-
-document
-.getElementById("logout-button")
-.addEventListener(
-    "click",
-    async function() {
-
-        await supabaseClient
-            .auth
-            .signOut();
-
-
-        afficherConnexion();
-
-    }
-);
-
-
-/* =========================================
-   SURVEILLER SESSION
-========================================= */
-
-supabaseClient
-.auth
-.onAuthStateChange(
-    function(event, session) {
-
-        if (!session) {
-
-            afficherConnexion();
+            throw error;
 
         }
 
+
+        alert(
+            "Produit supprimé avec succès."
+        );
+
+
+        await chargerProduits();
+
+    }
+
+    catch(error) {
+
+        console.error(
+            "Erreur suppression :",
+            error
+        );
+
+
+        alert(
+            "Erreur : " +
+            error.message
+        );
+
+    }
+
+}
+
+
+/* =========================================
+   28. RECHERCHE
+========================================= */
+
+searchInput.addEventListener(
+    "input",
+    function() {
+
+        const recherche =
+            this.value
+            .toLowerCase()
+            .trim();
+
+
+        if (!recherche) {
+
+            afficherProduits(
+                produits
+            );
+
+
+            return;
+
+        }
+
+
+        const resultat =
+            produits.filter(
+                function(produit) {
+
+                    const nom =
+                        (
+                            produit.name ||
+                            ""
+                        )
+                        .toLowerCase();
+
+
+                    const description =
+                        (
+                            produit.description ||
+                            ""
+                        )
+                        .toLowerCase();
+
+
+                    const categorie =
+                        (
+                            produit.category ||
+                            ""
+                        )
+                        .toLowerCase();
+
+
+                    return (
+                        nom.includes(
+                            recherche
+                        )
+                        ||
+                        description.includes(
+                            recherche
+                        )
+                        ||
+                        categorie.includes(
+                            recherche
+                        )
+                    );
+
+                }
+            );
+
+
+        afficherProduits(
+            resultat
+        );
+
     }
 );
 
 
 /* =========================================
-   DÉMARRAGE
+   29. SECURITE HTML
 ========================================= */
+
+function echapperHTML(
+    valeur
+) {
+
+    return String(
+        valeur ?? ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
+
+}
+
+
+function echapperAttribut(
+    valeur
+) {
+
+    return echapperHTML(
+        valeur
+    );
+
+}
+
+
+/* =========================================
+   30. DEMARRAGE
+========================================= */
+
+debug(
+    "Démarrage de l'administration..."
+);
+
 
 verifierSession();
