@@ -727,14 +727,10 @@ async function envoyerCommande() {
 ========================================= */
 
 const articlesCommande =
-    (article => {
-
-        return {
-            product_id: article.id,
-            quantity: article.quantite
-        };
-
-    });
+    panier.map(article => ({
+        product_id: article.id,
+        quantity: article.quantite
+    }));
 
 
 const {
