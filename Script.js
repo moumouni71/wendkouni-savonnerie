@@ -722,86 +722,58 @@ async function envoyerCommande() {
     });
 
 
-    /* CRÉATION COMMANDE */
+/* =========================================
+   CRÉATION COMMANDE
+========================================= */
 
-    const { data: commande, error } =
-        await supabaseClient
-        .from("orders")
-        .insert({
+const articlesCommande =
+    (article => {
 
-            customer_name: nom,
+        return {
+            product_id: article.id,
+            quantity: article.quantite
+        };
 
-            customer_phone: telephone,
-
-            customer_address: adresse,
-
-            delivery_method: livraison,
-
-            total: total,
-
-            status: "Nouvelle"
-
-        })
-        .select()
-        .single();
+    });
 
 
-    if (error) {
+const {
+    data: commandeId,
+    error
+} =
+    await supabaseClient
+    .rpc(
+        "creer_commande",
+        {
+            p_customer_name: nom,
+            p_customer_phone: telephone,
+            p_customer_address: adresse,
+            p_delivery_method: livraison,
+            p_items: articlesCommande
+        }
+    );
 
-    console.error("ERREUR ORDERS :", error);
+
+if (error) {
+
+    console.error(
+        "ERREUR CREATION COMMANDE :",
+        error
+    );
 
     alert(
-        "ERREUR ORDERS : " +
+        "ERREUR CREATION COMMANDE : " +
         error.message
     );
-    
-        return;
-    }
+
+    return;
+}
 
 
-    /* DÉTAILS */
-
-    const details =
-        panier.map(article => {
-
-            const produit =
-                produits.find(
-                    produit =>
-                        produit.id === article.id
-                );
-
-
-            return {
-
-                order_id: commande.id,
-
-                product_id: produit.id,
-
-                quantity: article.quantite,
-
-                price: produit.price
-
-            };
-
-        });
-
-
-    const { error: detailsError } =
-        await supabaseClient
-        .from("order_items")
-        .insert(details);
-
-
-    if (detailsError) {
-
-        console.error(detailsError);
-
-        alert(
-            "La commande a été créée mais les détails n'ont pas pu être enregistrés."
-        );
-
-        return;
-    }
+console.log(
+    "Commande créée avec succès. ID :",
+    commandeId
+);
 
 
 /* =========================================
