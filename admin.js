@@ -742,21 +742,19 @@ supabaseClient
 /* =========================================
    16. INITIALISER DASHBOARD
 ========================================= */
-
 async function initialiserDashboard() {
 
     debug(
         "Initialisation du dashboard..."
     );
 
-
     await chargerCategories();
-
 
     await chargerProduits();
 
-}
+    await chargerCommandes();
 
+}
 
 /* =========================================
    17. CHARGER CATEGORIES
@@ -926,6 +924,631 @@ async function chargerProduits() {
 
     afficherProduits(
         produits
+    );
+
+}
+/* =========================================
+   COMMANDES — CHARGEMENT
+========================================= */
+
+async function chargerCommandes() {
+
+    debug(
+        "Chargement des commandes..."
+    );
+
+    const {
+        data: commandes,
+        error
+    } =
+        await supabaseClient
+        .from("orders")
+        .select("*")
+        .order(
+            "created_at",
+            {
+                ascending: false
+            }
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Erreur commandes :",
+            error
+        );
+
+        debug(
+            "Erreur commandes : " +
+            error.message
+        );
+
+        const container =
+            document.getElementById(
+                "admin-orders"
+            );
+
+        if (container) {
+
+            container.innerHTML = `
+                <p>
+                    Impossible de charger les commandes.
+                </p>
+            `;
+
+        }
+
+        return;
+
+    }
+
+
+    const listeCommandes =
+        commandes || [];
+
+
+    debug(
+        listeCommandes.length +
+        " commande(s) chargée(s)."
+    );
+
+
+    await afficherCommandes(
+        listeCommandes
+    );
+
+}
+/* =========================================
+   COMMANDES — AFFICHAGE
+========================================= */
+
+async function afficherCommandes(
+    commandes
+) {
+
+    const container =
+        document.getElementById(
+            "admin-orders"
+        );
+
+
+    if (!container)
+        return;
+
+
+    if (!commandes.length) {
+
+        container.innerHTML = `
+            <div class="order-empty">
+                <p>
+                    📦 Aucune commande pour le moment.
+                </p>
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    container.innerHTML = `
+        <p>
+            ${commandes.length}
+            commande(s)
+        </p>
+    `;
+
+
+    for (
+        const commande
+        of commandes
+    ) {
+
+        const articleHTML =
+            await chargerArticlesCommande(
+                commande.id
+            );
+
+
+        const date =
+            new Date(
+                commande.created_at
+            );
+
+
+        const dateFormatee =
+            date.toLocaleString(
+                "fr-FR",
+                {
+                    dateStyle: "medium",
+                    timeStyle: "short"
+                }
+            );
+
+
+        const carte =
+            document.createElement(
+                "article"
+            );
+
+
+        carte.className =
+            "admin-order";
+
+
+        carte.innerHTML = `
+
+            <div class="admin-order-header">
+
+                <div>
+
+                    <span class="order-label">
+                        COMMANDE
+                    </span>
+
+                    <h3>
+                        #${commande.id}
+                    </h3>
+
+                </div>
+
+
+                <div class="order-status-control">
+
+    <label>
+        Statut
+    </label>
+
+    <select
+        class="order-status-select"
+        data-order-id="${commande.id}"
+    >
+
+        <option
+            value="Nouvelle"
+            ${
+                commande.status === "Nouvelle"
+                ? "selected"
+                : ""
+            }
+        >
+            🆕 Nouvelle
+        </option>
+
+        <option
+            value="En préparation"
+            ${
+                commande.status === "En préparation"
+                ? "selected"
+                : ""
+            }
+        >
+            🔄 En préparation
+        </option>
+
+        <option
+            value="En livraison"
+            ${
+                commande.status === "En livraison"
+                ? "selected"
+                : ""
+            }
+        >
+            🚚 En livraison
+        </option>
+
+        <option
+            value="Terminée"
+            ${
+                commande.status === "Terminée"
+                ? "selected"
+                : ""
+            }
+        >
+            ✅ Terminée
+        </option>
+
+        <option
+            value="Annulée"
+            ${
+                commande.status === "Annulée"
+                ? "selected"
+                : ""
+            }
+        >
+            ❌ Annulée
+        </option>
+
+    </select>
+
+</div>
+
+            </div>
+
+
+            <div class="admin-order-client">
+
+                <h4>
+                    👤 Client
+                </h4>
+
+                <p>
+                    <strong>
+                        ${echapperHTML(
+                            commande.customer_name
+                        )}
+                    </strong>
+                </p>
+
+                <p>
+                    📞
+                    ${echapperHTML(
+                        commande.customer_phone
+                    )}
+                </p>
+
+                <p>
+                    📍
+                    ${echapperHTML(
+                        commande.customer_address
+                    )}
+                </p>
+
+                <p>
+                    🚚
+                    ${echapperHTML(
+                        commande.delivery_method
+                    )}
+                </p>
+
+            </div>
+
+
+            <div class="admin-order-items">
+
+                <h4>
+                    🧼 Produits commandés
+                </h4>
+
+                ${articleHTML}
+
+            </div>
+
+
+            <div class="admin-order-footer">
+
+                <span>
+                    📅 ${dateFormatee}
+                </span>
+
+                <strong>
+                    ${Number(
+                        commande.total || 0
+                    ).toLocaleString(
+                        "fr-FR"
+                    )}
+                    FCFA
+                </strong>
+
+            </div>
+
+        `;
+
+
+        container.appendChild(
+            carte
+        );
+
+    }
+initialiserEvenementsStatut();
+}
+/* =========================================
+   COMMANDES — ARTICLES
+========================================= */
+async function chargerArticlesCommande(
+    orderId
+) {
+
+    const {
+        data: articles,
+        error
+    } =
+        await supabaseClient
+        .from("order_items")
+        .select(`
+            id,
+            order_id,
+            product_id,
+            quantity,
+            price,
+            products (
+                name,
+                image_url
+            )
+        `)
+        .eq(
+            "order_id",
+            orderId
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Erreur articles commande :",
+            error
+        );
+
+        return `
+            <p>
+                Impossible de charger les articles.
+            </p>
+        `;
+
+    }
+
+
+    if (
+        !articles ||
+        !articles.length
+    ) {
+
+        return `
+            <p>
+                Aucun article enregistré.
+            </p>
+        `;
+
+    }
+
+
+    return articles
+        .map(
+            function(article) {
+
+                const nomProduit =
+                    article.products &&
+                    article.products.name
+                    ? article.products.name
+                    : "Produit #" +
+                      article.product_id;
+
+
+                const sousTotal =
+                    Number(
+                        article.price || 0
+                    )
+                    *
+                    Number(
+                        article.quantity || 0
+                    );
+
+
+                return `
+
+                    <div class="order-item">
+
+                        <div>
+
+                            <strong>
+                                🧼
+                                ${echapperHTML(
+                                    nomProduit
+                                )}
+                            </strong>
+
+                            <span>
+                                ${article.quantity}
+                                ×
+                                ${
+                                    Number(
+                                        article.price || 0
+                                    ).toLocaleString(
+                                        "fr-FR"
+                                    )
+                                }
+                                FCFA
+                            </span>
+
+                        </div>
+
+
+                        <strong>
+                            ${
+                                sousTotal.toLocaleString(
+                                    "fr-FR"
+                                )
+                            }
+                            FCFA
+                        </strong>
+
+                    </div>
+
+                `;
+
+            }
+        )
+        .join("");
+
+}
+/* =========================================
+   ACTUALISER LES COMMANDES
+========================================= */
+
+const refreshOrdersButton =
+    document.getElementById(
+        "refresh-orders-button"
+    );
+
+
+if (refreshOrdersButton) {
+
+    refreshOrdersButton.addEventListener(
+        "click",
+        async function() {
+
+            refreshOrdersButton.disabled =
+                true;
+
+            refreshOrdersButton.textContent =
+                "⏳ Chargement...";
+
+
+            try {
+
+                await chargerCommandes();
+
+            }
+
+            finally {
+
+                refreshOrdersButton.disabled =
+                    false;
+
+                refreshOrdersButton.textContent =
+                    "🔄 Actualiser";
+
+            }
+
+        }
+    );
+
+}
+/* =========================================
+   COMMANDES — MODIFIER STATUT
+========================================= */
+
+async function modifierStatutCommande(
+    orderId,
+    nouveauStatut
+) {
+
+    debug(
+        "Modification statut commande #" +
+        orderId +
+        " → " +
+        nouveauStatut
+    );
+
+
+    const {
+        error
+    } =
+        await supabaseClient
+        .from("orders")
+        .update({
+            status: nouveauStatut
+        })
+        .eq(
+            "id",
+            orderId
+        );
+
+
+    if (error) {
+
+        console.error(
+            "Erreur modification statut :",
+            error
+        );
+
+        alert(
+            "Impossible de modifier le statut : " +
+            error.message
+        );
+
+        return false;
+
+    }
+
+
+    debug(
+        "Statut commande #" +
+        orderId +
+        " modifié."
+    );
+
+
+    return true;
+
+}
+/* =========================================
+   COMMANDES — EVENEMENTS STATUT
+========================================= */
+
+function initialiserEvenementsStatut() {
+
+    document
+    .querySelectorAll(
+        ".order-status-select"
+    )
+    .forEach(
+        function(select) {
+
+            select.addEventListener(
+                "change",
+                async function() {
+
+                    const orderId =
+                        Number(
+                            this.dataset.orderId
+                        );
+
+
+                    const nouveauStatut =
+                        this.value;
+
+
+                    const ancienTexte =
+                        this.dataset.previousValue ||
+                        "";
+
+
+                    this.disabled =
+                        true;
+
+
+                    const succes =
+                        await modifierStatutCommande(
+                            orderId,
+                            nouveauStatut
+                        );
+
+
+                    this.disabled =
+                        false;
+
+
+                    if (succes) {
+
+                        this.dataset.previousValue =
+                            nouveauStatut;
+
+                        console.log(
+                            "Commande #" +
+                            orderId +
+                            " → " +
+                            nouveauStatut
+                        );
+
+                    }
+                    else {
+
+                        /*
+                         * En cas d'erreur,
+                         * on recharge les commandes
+                         * pour remettre la bonne valeur.
+                         */
+
+                        await chargerCommandes();
+
+                    }
+
+                }
+            );
+
+        }
     );
 
 }
