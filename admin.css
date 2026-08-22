@@ -714,3 +714,249 @@ body {
     }
 
 }
+/* =========================================
+   COMMANDES ADMINISTRATEUR
+========================================= */
+
+.orders-section {
+    margin-top: 40px;
+}
+
+
+/* =========================================
+   CONTENEUR COMMANDES
+========================================= */
+
+.admin-orders {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+
+/* =========================================
+   CARTE COMMANDE
+========================================= */
+
+.admin-order {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+
+/* =========================================
+   EN-TÊTE
+========================================= */
+
+.admin-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.order-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #777777;
+}
+
+
+.admin-order-header h3 {
+    margin: 4px 0 0;
+    font-size: 22px;
+}
+
+
+/* =========================================
+   STATUT
+========================================= */
+
+.order-status-control {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+
+.order-status-control label {
+    font-size: 12px;
+    color: #777777;
+}
+
+
+.order-status-select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #d5d5d5;
+    background: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+/* =========================================
+   INFORMATIONS CLIENT
+========================================= */
+
+.admin-order-client {
+    padding: 18px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.admin-order-client h4,
+.admin-order-items h4 {
+    margin: 0 0 12px;
+    font-size: 15px;
+}
+
+
+.admin-order-client p {
+    margin: 7px 0;
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   ARTICLES
+========================================= */
+
+.admin-order-items {
+    padding: 18px 0;
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 0;
+    border-bottom: 1px dashed #eeeeee;
+}
+
+
+.order-item:last-child {
+    border-bottom: none;
+}
+
+
+.order-item > div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.order-item strong {
+    line-height: 1.4;
+}
+
+
+.order-item span {
+    font-size: 14px;
+    color: #666666;
+}
+
+
+/* =========================================
+   TOTAL ET DATE
+========================================= */
+
+.admin-order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding-top: 18px;
+}
+
+
+.admin-order-footer span {
+    font-size: 13px;
+    color: #777777;
+}
+
+
+.admin-order-footer strong {
+    font-size: 20px;
+}
+
+
+/* =========================================
+   AUCUNE COMMANDE
+========================================= */
+
+.order-empty {
+    text-align: center;
+    padding: 40px 20px;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px dashed #cccccc;
+}
+
+
+/* =========================================
+   BOUTON ACTUALISER
+========================================= */
+
+#refresh-orders-button {
+    cursor: pointer;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+
+    .admin-order {
+        padding: 16px;
+        border-radius: 14px;
+    }
+
+
+    .admin-order-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .order-status-control {
+        align-items: stretch;
+    }
+
+
+    .order-status-select {
+        width: 100%;
+    }
+
+
+    .order-item {
+        align-items: flex-start;
+    }
+
+
+    .admin-order-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+
+    .admin-order-footer strong {
+        font-size: 19px;
+    }
+
+}
