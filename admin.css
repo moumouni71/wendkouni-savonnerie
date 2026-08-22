@@ -960,3 +960,178 @@ body {
     }
 
 }
+/* =========================================
+   OUTILS COMMANDES
+========================================= */
+
+.orders-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+
+.export-menu {
+    position: relative;
+}
+
+
+.export-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 190px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    z-index: 1000;
+}
+
+
+.export-menu-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+
+.export-menu-dropdown button:hover {
+    background: #f3f4f6;
+}
+
+
+@media (max-width: 600px) {
+
+    .orders-toolbar {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .orders-toolbar button {
+        width: 100%;
+    }
+
+
+    .export-menu {
+        width: 100%;
+    }
+
+
+    .export-menu-dropdown {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
+        box-sizing: border-box;
+    }
+
+}
+
+
+/* =========================================================
+   CORRECTIONS / FINITIONS ADMIN
+========================================================= */
+
+.admin-user-card {
+    margin-bottom: 30px;
+}
+
+.admin-user-card strong {
+    color: #368454;
+    font-size: 18px;
+}
+
+.orders-count {
+    color: #718078;
+    margin-bottom: 5px;
+}
+
+.admin-order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    padding-top: 18px;
+}
+
+.admin-order-footer strong {
+    color: #368454;
+    font-size: 20px;
+}
+
+.orders-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+.export-menu {
+    position: relative;
+}
+
+.export-menu-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 8px);
+    min-width: 190px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.12);
+    z-index: 1000;
+}
+
+.export-menu-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 11px 12px;
+    border: none;
+    background: transparent;
+    text-align: left;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.export-menu-dropdown button:hover {
+    background: #f3f4f6;
+}
+
+@media (max-width: 600px) {
+
+    .orders-toolbar {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .orders-toolbar > button,
+    .export-menu,
+    .export-menu > button {
+        width: 100%;
+    }
+
+    .export-menu-dropdown {
+        position: static;
+        width: 100%;
+        margin-top: 8px;
+        box-sizing: border-box;
+    }
+
+    .admin-order-footer {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
